@@ -1,52 +1,35 @@
 import './charList.scss';
-import abyss from '../../resources/img/abyss.jpg';
+import CharListItem from '../charListItem/CharListItem';
+import { Component } from 'react';
 
-const CharList = () => {
-    return (
-        <div className="char__list">
-            <ul className="char__grid">
-                <li className="char__item">
-                    <img src={abyss} alt="abyss"/>
-                    <div className="char__name">Abyss</div>
-                </li>
-                <li className="char__item char__item_selected">
-                    <img src={abyss} alt="abyss"/>
-                    <div className="char__name">Abyss</div>
-                </li>
-                <li className="char__item">
-                    <img src={abyss} alt="abyss"/>
-                    <div className="char__name">Abyss</div>
-                </li>
-                <li className="char__item">
-                    <img src={abyss} alt="abyss"/>
-                    <div className="char__name">Abyss</div>
-                </li>
-                <li className="char__item">
-                    <img src={abyss} alt="abyss"/>
-                    <div className="char__name">Abyss</div>
-                </li>
-                <li className="char__item">
-                    <img src={abyss} alt="abyss"/>
-                    <div className="char__name">Abyss</div>
-                </li>
-                <li className="char__item">
-                    <img src={abyss} alt="abyss"/>
-                    <div className="char__name">Abyss</div>
-                </li>
-                <li className="char__item">
-                    <img src={abyss} alt="abyss"/>
-                    <div className="char__name">Abyss</div>
-                </li>
-                <li className="char__item">
-                    <img src={abyss} alt="abyss"/>
-                    <div className="char__name">Abyss</div>
-                </li>
-            </ul>
-            <button className="button button__main button__long">
-                <div className="inner">load more</div>
-            </button>
-        </div>
-    )
+class CharList extends Component {
+    
+    state = {
+        cards: []
+    }
+
+    componentDidMount() {
+        for (let i = 1; i < 10; i++){
+            this.setState(state => ({
+                cards: [
+                    ...state.cards,
+                    <CharListItem key={i} id={i} onCharSelected={this.props.onCharSelected}/>
+                ]
+            }))
+        }
+    }
+
+    render() {
+        return (
+            <div className="char__list">
+                <ul className="char__grid">
+                    {this.state.cards}
+                </ul>
+                <button className="button button__main button__long">
+                    <div className="inner">load more</div>
+                </button>
+            </div>
+    )}
 }
 
 export default CharList;
