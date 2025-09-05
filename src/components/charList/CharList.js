@@ -1,4 +1,4 @@
-import {Component} from 'react';
+import React, {Component} from 'react';
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 import MarvelService from '../../services/MarvelService';
@@ -16,10 +16,35 @@ class CharList extends Component {
         charEnded: false
     }
     
+    listRefsCards = [];
+
     marvelService = new MarvelService();
+
+    doRefList = (elem) => {
+        let newRef = React.createRef();
+        newRef = elem;
+        this.listRefsCards.push(newRef);
+    }
+
+    selectCharForEnter = (e) => {
+        if (e.key === 'Enter') {
+            this.listRefsCards.forEach((elem) => elem.addEventListener);
+            this.listRefsCards.forEach(elem => {
+                if (elem === document.activeElement){
+                    elem.click();
+                }
+            })
+        }
+    }
+
 
     componentDidMount() {
         this.onRequest();
+        document.addEventListener('keypress', this.selectCharForEnter);
+    }
+
+    componentWillUnmount(){
+        document.removeEventListener('keypress', this.selectCharForEnter);
     }
 
     onRequest = (offset) => {
@@ -57,15 +82,26 @@ class CharList extends Component {
         })
     }
 
+    setFocusCharacter = (target) => {
+        this.listRefsCards.forEach(elem => {
+            if (elem === target){
+                elem.focus();
+            } 
+        })
+    }
+
+
+
     // Этот метод создан для оптимизации, 
     // чтобы не помещать такую конструкцию в метод render
     renderItems(arr) {
         const items =  arr.map((item) => {
             return (
-                <li 
+                <li ref={this.doRefList}
                     className="char__item"
                     key={item.id}
-                    onClick={() => this.props.onCharSelected(item.id)}>
+                    tabIndex={item.id}
+                    onClick={(e) => {this.props.onCharSelected(item.id); this.setFocusCharacter(e.currentTarget)}}>
                         <img src={item.thumbnail} alt={item.name}/>
                         <div className="char__name">{item.name}</div>
                 </li>
