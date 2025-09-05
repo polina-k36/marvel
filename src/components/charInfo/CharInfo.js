@@ -1,6 +1,7 @@
 import './charInfo.scss';
 import { Component } from 'react';
 import MarvelService from '../../services/MarvelService';
+import PropTypes from 'prop-types';
 
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
@@ -119,6 +120,12 @@ const View = ({char}) => {
         </>
     )
 }
-
-
+//проверка типов приходящих данных в класс в пропсах 
+CharInfo.propTypes = {
+    charId: PropTypes.number
+}
+///можно установить пропс по умолчанию
+CharInfo.defaultProps = {
+  charId: 1
+};
 export default CharInfo;
