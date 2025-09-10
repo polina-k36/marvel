@@ -37,7 +37,6 @@ class CharList extends Component {
         }
     }
 
-
     componentDidMount() {
         this.onRequest();
         document.addEventListener('keypress', this.selectCharForEnter);
@@ -89,9 +88,6 @@ class CharList extends Component {
             } 
         })
     }
-
-
-
     // Этот метод создан для оптимизации, 
     // чтобы не помещать такую конструкцию в метод render
     renderItems(arr) {
