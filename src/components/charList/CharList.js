@@ -1,103 +1,85 @@
-import React, {Component} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 import MarvelService from '../../services/MarvelService';
 import './charList.scss';
 import PropTypes from 'prop-types';
 
-class CharList extends Component {
+const CharList = ({onCharSelected}) => {
 
-    state = {
-        charList: [],
-        loading: true,
-        error: false,
-        newItemLoading: false,
-        offset: 0,
-        charEnded: false
-    }
+    const [charList, setCharList] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+    const [newItemLoading, setNewItemLoading] = useState(false);
+    const [offset, setOffset] = useState(0);
+    const [charEnded, setCharEnded] = useState(false);
     
-    listRefsCards = [];
+    let listRefsCards = useRef([]); // хук можно помещать только на верхний уровень. нельзя использовать его в циклах или функциях
 
-    marvelService = new MarvelService();
+    const marvelService = new MarvelService();
 
-    doRefList = (elem) => {
-        let newRef = React.createRef();
-        newRef = elem;
-        this.listRefsCards.push(newRef);
-    }
-
-    selectCharForEnter = (e) => {
+    const selectCharForEnter = (e) => {
         if (e.key === 'Enter') {
-            this.listRefsCards.forEach((elem) => elem.addEventListener);
-            this.listRefsCards.forEach(elem => {
+            listRefsCards.current.forEach(elem => {
                 if (elem === document.activeElement){
                     elem.click();
                 }
             })
         }
     }
+    useEffect(() => {
+        onRequest();
+        document.addEventListener('keypress', selectCharForEnter);
+        return () => document.removeEventListener('keypress', selectCharForEnter);
+    }, []);
 
-    componentDidMount() {
-        this.onRequest();
-        document.addEventListener('keypress', this.selectCharForEnter);
+
+    const onRequest = (offset) => {
+        onCharListLoading();
+        marvelService.getAllCharacters(offset)
+            .then(onCharListLoaded)
+            .catch(onError)
     }
 
-    componentWillUnmount(){
-        document.removeEventListener('keypress', this.selectCharForEnter);
+    const onCharListLoading = () => {
+        setLoading(true);
     }
 
-    onRequest = (offset) => {
-        this.onCharListLoading();
-        this.marvelService.getAllCharacters(offset)
-            .then(this.onCharListLoaded)
-            .catch(this.onError)
-    }
-
-    onCharListLoading = () => {
-        this.setState({
-            newItemLoading: true
-        })
-    }
-
-    onCharListLoaded = (newCharList) => {
+    const onCharListLoaded = (newCharList) => {
         let ended = false;
         if (newCharList.length < 9) {
             ended = true;
         }
-
-        this.setState(({offset, charList}) => ({
-            charList: [...charList, ...newCharList],
-            loading: false,
-            newItemLoading: false,
-            offset: offset + 9,
-            charEnded: ended
-        }))
+        setCharList(charList => ([...charList, ...newCharList]));
+        setLoading(false);
+        setNewItemLoading(false);
+        setOffset(offset => offset + 9);
+        setCharEnded(ended);
     }
 
-    onError = () => {
-        this.setState({
-            error: true,
-            loading: false
-        })
+    const onError = () => {
+        setLoading(false);
+        setError(true);
     }
 
-    setFocusCharacter = (target) => {
-        this.listRefsCards.forEach(elem => {
+    const setFocusCharacter = (target) => {
+        listRefsCards.current.forEach(elem => {
             if (elem === target){
                 elem.focus();
             } 
-        })
+        });
     }
     // Этот метод создан для оптимизации, 
     // чтобы не помещать такую конструкцию в метод render
-    renderItems(arr) {
-        const items =  arr.map((item) => {
+    const renderItems = (arr) => {
+        const items =  arr.map((item, i) => {
             return (
-                <li ref={this.doRefList}
+                <li ref={el => listRefsCards.current[i] = el}
                     className="char__item"
                     key={item.id}
                     tabIndex={item.id}
-                    onClick={(e) => {this.props.onCharSelected(item.id); this.setFocusCharacter(e.currentTarget)}}>
+                    onClick={(e) => {onCharSelected(item.id); setFocusCharacter(e.currentTarget)}}>
+                        {/* РАССМОТРЕТЬ ВСТАВКУ ФУНКЦИОНАЛА onKeyPress ВМЕСТО addEventL и функции выше */}
                         <img src={item.thumbnail} alt={item.name}/>
                         <div className="char__name">{item.name}</div>
                 </li>
@@ -110,18 +92,14 @@ class CharList extends Component {
             </ul>
         )
     }
+    
 
-    render() {
+    const items = renderItems(charList);
+    const errorMessage = error ? <ErrorMessage/> : null;
+    const spinner = loading ? <Spinner/> : null;
+    const content = !(loading || error) ? items : null;
 
-        const {charList, loading, error, offset, newItemLoading, charEnded} = this.state;
-        
-        const items = this.renderItems(charList);
-
-        const errorMessage = error ? <ErrorMessage/> : null;
-        const spinner = loading ? <Spinner/> : null;
-        const content = !(loading || error) ? items : null;
-/* создать кнопку скрытия лишних карточек */
-        return (
+    return (
             <div className="char__list">
                 {errorMessage}
                 {spinner}
@@ -130,13 +108,16 @@ class CharList extends Component {
                     className="button button__main button__long"
                     disabled={newItemLoading}
                     style={{'display': charEnded ? 'none' : 'block'}}
-                    onClick={() => this.onRequest(offset)}>
+                    onClick={() => onRequest(offset)}>
                     <div className="inner">load more</div>
                 </button>
             </div>
         )
-    }
+
+/* создать кнопку скрытия лишних карточек */
+        
 }
+
 
 //проверка типов приходящих данных в класс в пропсах 
 CharList.propTypes = {
