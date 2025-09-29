@@ -1,0 +1,47 @@
+@import '../../style/variables.scss';
+
+.form {
+    margin-top: 30px;
+    padding: 25px;
+    width: 425px;
+    max-height: 176px;
+    min-height: 127px;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
+    background: #fff;
+    gap: 15px;
+    display: flex;
+    flex-direction: column;
+
+    input {
+        width: 250px;
+        height: 38px;
+        box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
+        background: #fff;
+        font-weight: 400;
+        font-size: 14px;
+        color: #000;
+        border: none;
+        padding: 0 10px;
+    }
+
+    .submitInput {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+    }
+}
+
+.message {
+    margin-top: 7px;
+    font-weight: 700;
+    font-size: 18px;
+
+    &-error {
+        color: $main-color;
+    }
+
+    &-success {
+        color: #03710e;
+    }
+}

@@ -1,22 +1,34 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useRef, useEffect, useMemo} from 'react';
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
-import MarvelService from '../../services/MarvelService';
+import useMarvelService from '../../services/MarvelService';
 import './charList.scss';
 import PropTypes from 'prop-types';
+
+const setContent = (process, Component, newItemLoading) => {
+    switch (process) {
+        case 'waiting': 
+        case 'loading': 
+            return newItemLoading ? <Component/> : <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}><Spinner/></div>;
+        case 'error': 
+            return <ErrorMessage/>;
+        case 'confirmed': 
+            return <Component/>;
+        default: 
+            throw new Error('Incorrect type');
+    }
+}
 
 const CharList = ({onCharSelected}) => {
 
     const [charList, setCharList] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
     const [newItemLoading, setNewItemLoading] = useState(false);
     const [offset, setOffset] = useState(0);
     const [charEnded, setCharEnded] = useState(false);
     
     let listRefsCards = useRef([]); // хук можно помещать только на верхний уровень. нельзя использовать его в циклах или функциях
 
-    const marvelService = new MarvelService();
+    const {process, getAllCharacters, clearError, setProcess} = useMarvelService();
 
     const selectCharForEnter = (e) => {
         if (e.key === 'Enter') {
@@ -28,21 +40,19 @@ const CharList = ({onCharSelected}) => {
         }
     }
     useEffect(() => {
-        onRequest();
+        onRequest(offset, true);
         document.addEventListener('keypress', selectCharForEnter);
         return () => document.removeEventListener('keypress', selectCharForEnter);
+        //eslint-disable-next-line
     }, []);
 
 
-    const onRequest = (offset) => {
-        onCharListLoading();
-        marvelService.getAllCharacters(offset)
+    const onRequest = (offset, initial) => {
+        clearError();
+        setNewItemLoading(!initial); 
+        getAllCharacters(offset)
             .then(onCharListLoaded)
-            .catch(onError)
-    }
-
-    const onCharListLoading = () => {
-        setLoading(true);
+            .then(() => {setProcess('confirmed')});
     }
 
     const onCharListLoaded = (newCharList) => {
@@ -50,16 +60,10 @@ const CharList = ({onCharSelected}) => {
         if (newCharList.length < 9) {
             ended = true;
         }
-        setCharList(charList => ([...charList, ...newCharList]));
-        setLoading(false);
+        setCharList(charList => [...charList, ...newCharList]);
         setNewItemLoading(false);
         setOffset(offset => offset + 9);
         setCharEnded(ended);
-    }
-
-    const onError = () => {
-        setLoading(false);
-        setError(true);
     }
 
     const setFocusCharacter = (target) => {
@@ -73,18 +77,18 @@ const CharList = ({onCharSelected}) => {
     // чтобы не помещать такую конструкцию в метод render
     const renderItems = (arr) => {
         const items =  arr.map((item, i) => {
-            return (
-                <li ref={el => listRefsCards.current[i] = el}
-                    className="char__item"
-                    key={item.id}
-                    tabIndex={item.id}
-                    onClick={(e) => {onCharSelected(item.id); setFocusCharacter(e.currentTarget)}}>
+            return (<li 
+                        ref={el => listRefsCards.current[i] = el}
+                        className="char__item"
+                        key={item.id}
+                        tabIndex={item.id}
+                        onClick={(e) => {onCharSelected(item.id); setFocusCharacter(e.currentTarget)}}>
                         {/* РАССМОТРЕТЬ ВСТАВКУ ФУНКЦИОНАЛА onKeyPress ВМЕСТО addEventL и функции выше */}
                         <img src={item.thumbnail} alt={item.name}/>
                         <div className="char__name">{item.name}</div>
-                </li>
-            )
-        });
+                    </li>
+                    )
+            });
         // А эта конструкция вынесена для центровки спиннера/ошибки
         return (
             <ul className="char__grid">
@@ -92,18 +96,15 @@ const CharList = ({onCharSelected}) => {
             </ul>
         )
     }
+
+    const elements = useMemo(() => {
+        return setContent(process, () => renderItems(charList), newItemLoading);
+        // eslint-disable-next-line
+    }, [process])
     
-
-    const items = renderItems(charList);
-    const errorMessage = error ? <ErrorMessage/> : null;
-    const spinner = loading ? <Spinner/> : null;
-    const content = !(loading || error) ? items : null;
-
     return (
             <div className="char__list">
-                {errorMessage}
-                {spinner}
-                {content}
+                {elements}
                 <button 
                     className="button button__main button__long"
                     disabled={newItemLoading}

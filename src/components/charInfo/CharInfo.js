@@ -1,19 +1,14 @@
 import './charInfo.scss';
 import { useState, useEffect } from 'react';
-import MarvelService from '../../services/MarvelService';
+import useMarvelService from '../../services/MarvelService';
 import PropTypes from 'prop-types';
-
-import Spinner from '../spinner/Spinner';
-import ErrorMessage from '../errorMessage/ErrorMessage';
-import Skeleton from '../skeleton/Skeleton'
+import setContent from '../../utils/setContent';
 
 const CharInfo = ({charId = 1}) => {
 
     const [char, setChar] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(false);
 
-    const marvelService = new MarvelService();
+    const {getCharacterById, clearError, process, setProcess} = useMarvelService();
 
     useEffect(() => {
         updateChar();
@@ -32,46 +27,27 @@ const CharInfo = ({charId = 1}) => {
     
     const onCharLoaded = (char) => {
         setChar(char);
-        setLoading(false);
-    }
-
-    const onCharLoading = () => {
-        setLoading(true);
-        setError(false);
-    }
-
-    const onError = () => {
-        setLoading(false);
-        setError(true);
     }
 
     const updateChar = () => {
+        clearError();
         if (!charId){
             return;
         }
-        onCharLoading();
-        marvelService.getCharacterById(charId)
-        .then(onCharLoaded)
-        .catch(onError);
+        getCharacterById(charId)
+            .then(onCharLoaded)
+            .then(() => {setProcess('confirmed')});
     }
-
-    const skeleton =  !(char || loading || error) ? <Skeleton/> : null;
-    const errorMessage = error ? <ErrorMessage/> : null;
-    const spinner = loading ? <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}><Spinner/></div> : null;
-    const content = !(loading || error || !char) ? <View char={char}/> : null;
 
     return (
         <div className="char__info">
-            {skeleton}
-            {errorMessage}
-            {spinner}
-            {content}
+            {setContent(process, View, char)}
         </div>
     )
 }
 
-const View = ({char}) => {
-    const {name, description, thumbnail, homepage, wiki, comics} = char;
+const View = ({data}) => {
+    const {name, description, thumbnail, homepage, wiki, comics} = data;
     return (
         <>
             <div className="char__basics">

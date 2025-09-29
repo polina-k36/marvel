@@ -56,3 +56,22 @@
         filter: grayscale(.5);
     }
 }
+
+
+.char__item-enter {
+    opacity: 0;
+}
+
+.char__item-enter-active {
+    opacity: 1;
+    transition: opacity 300ms, transform 300ms;
+}
+
+.char__item-exit {
+    opacity: 1;
+}
+
+.char__item-exit-active {
+    opacity: 0;
+    transition: opacity 300ms, transform 300ms;
+}
