@@ -1,10 +1,10 @@
+
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+
 import useMarvelService from '../../services/MarvelService';
 
-import Spinner from '../spinner/Spinner';
-import ErrorMessage from '../errorMessage/ErrorMessage';
-
+import setContent from '../../utils/setContent';
 
 import './singleComicPage.scss';
 
@@ -12,7 +12,7 @@ const IntroPage = ({Component, type}) => {
 
     const {dataId} = useParams();
     const [data, setData] = useState(null);
-    const {loading, error, getComicById, getCharacterById, clearError} = useMarvelService();
+    const {getComicById, getCharacterById, clearError, process, setProcess} = useMarvelService();
     
     useEffect(() => {
         updateData();
@@ -31,26 +31,24 @@ const IntroPage = ({Component, type}) => {
         switch (type) {
             case 'char':
                 getCharacterById(dataId)
-                    .then(onDataLoaded);
+                    .then(onDataLoaded)
+                    .then(() => setProcess('confirmed'));
                     break;
             case 'comic':
                 getComicById(dataId)
-                    .then(onDataLoaded);
+                    .then(onDataLoaded)
+                    .then(() => setProcess('confirmed'));
                 break;
             default:
                 throw new Error('Incorrect type of component');
         }
     }
 
-    const errorMessage = error ? <ErrorMessage/> : null;
-    const spinner = loading ? <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', width: '65vw', height: '50vh'}}><Spinner/></div> : null;
-    const content = !(loading || error || !data) ? <Component data={data}/> : null;
+
     return (
-        
         <div className="single-comic">
-            {errorMessage}
-            {spinner}
-            {content}
+
+            {setContent(process, Component, data)}
         </div>
     )
 }

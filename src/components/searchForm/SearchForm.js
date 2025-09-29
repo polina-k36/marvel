@@ -14,6 +14,9 @@ const SearchForm = () => {
     const {error, getCharacterByName, clearError} = useMarvelService();
 
     const onSubmit = ({nameChar}) => {
+        nameChar = nameChar.toLowerCase();
+        nameChar = nameChar.charAt(0).toUpperCase() + nameChar.slice(1);
+        
         clearError();
         getCharacterByName(nameChar)
             .then(resultSearching);
@@ -38,7 +41,7 @@ const SearchForm = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="form">
             <label htmlFor="nameChar">Or find a character by name:</label>
             <div className="submitInput">
-                <input defaultValue="" {...register("nameChar", {required: true})} placeholder="Enter name"/>
+                <input  defaultValue="" {...register("nameChar", {required: true})} placeholder="Enter name" />
                 <button type="submit" className="button button__main"><div className="inner">find</div></button>
             </div>
             {errors.nameChar
